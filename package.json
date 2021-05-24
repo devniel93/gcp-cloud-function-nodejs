@@ -1,0 +1,14 @@
+{
+  "name": "gcp-cloud-function-nodejs",
+  "version": "1.0.0",
+  "description": "gcp-cloud-function-nodejs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "dolano",
+  "license": "ISC",
+  "dependencies": {
+    "escape-html": "^1.0.3"
+  }
+}
