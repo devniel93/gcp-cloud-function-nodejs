@@ -8,3 +8,9 @@ Use NPM to install dependencies
 ```bash
 npm install
 ```
+## Run
+
+To run express server locally using Functions-framework (`start` is configured as script in package.json)
+```bash
+npm start
+```
