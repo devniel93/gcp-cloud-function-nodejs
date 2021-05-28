@@ -1,0 +1,17 @@
+{  
+    "server": "localhost", 
+    "authentication": {
+        "type": "default",
+        "options": {
+            "userName": "demo", 
+            "password": "D3m012$" 
+        }
+    },
+    "options": {
+        "database": "AdventureWorksLT2017",        
+        "encrypt": false,
+        "instancename": "MSSQLSERVER",
+        "port": 1433,
+        "trustServerCertificate": false
+    }
+} 
