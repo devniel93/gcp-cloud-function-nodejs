@@ -1,18 +1,43 @@
 const config = require('./config.json')
+
 var Connection = require('tedious').Connection;
-var TYPES = require('tedious').TYPES;
 var Request = require('tedious').Request;
+var TYPES = require('tedious').TYPES;
 
 var customerName;
 var connection;
 
+exports.myDemoFunction = (req, res) => {
+    try {
+        switch (req.path) {
+            case "/customers":
+                getCustomers(req, res);
+                break;
+            default:
+                res.status(200).send('Hello World!');
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(`Error: ${err.message}`);
+    }
+};
+
 const getCustomers = (req, res) => {
 
-    console.log('----------------------------------------------------------------');
-    let statement = "select c.FirstName from SalesLT.Customer c where c.CustomerID = @customerId";
     customerName = "";
-    let customerId = req.query.customerId || 0;
-    executeStatement(statement, customerId, res);
+    console.log('----------------------------------------------------------------');
+    if (req.method === 'GET') {
+        let statement = "select c.FirstName from SalesLT.Customer c where c.CustomerID = @customerId";    
+        let customerId = req.query.customerId || 0;
+        executeStatement(statement, customerId, res);
+    } 
+    else if (req.method === 'POST') {
+        res.status(201).send('Creating customer...');
+    } 
+    else {
+        res.status(404).send('Not Found!');
+    }
+    
 };
 
 const executeStatement = (statement, customerId, res) => {
@@ -65,17 +90,3 @@ const execStmtRequest = (stmt, customerId, res) => {
     connection.execSql(request);
 };
 
-exports.myDemoFunction = (req, res) => {
-    try {
-        switch (req.path) {
-            case "/customers":
-                getCustomers(req, res);
-                break;
-            default:
-                res.status(200).send('Hello World!');
-        }
-    } catch (err) {
-        console.log(err);
-        res.status(500).send(`Error: ${err.message}`);
-    }
-};
