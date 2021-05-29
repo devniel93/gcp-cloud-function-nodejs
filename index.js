@@ -10,11 +10,16 @@ var connection;
 exports.myDemoFunction = (req, res) => {
     try {
         switch (req.path) {
-            case "/customers":
-                getCustomers(req, res);
-                break;
-            default:
+            case "/":
                 res.status(200).send('Hello World!');
+                break;
+
+            case "/customers":
+                customerController(req, res);
+                break;
+
+            default:
+                res.status(404).send("Not Found!");
         }
     } catch (err) {
         console.log(err);
@@ -22,71 +27,85 @@ exports.myDemoFunction = (req, res) => {
     }
 };
 
-const getCustomers = (req, res) => {
-
-    customerName = "";
-    console.log('----------------------------------------------------------------');
-    if (req.method === 'GET') {
-        let statement = "select c.FirstName from SalesLT.Customer c where c.CustomerID = @customerId";    
-        let customerId = req.query.customerId || 0;
-        executeStatement(statement, customerId, res);
-    } 
-    else if (req.method === 'POST') {
-        res.status(201).send('Creating customer...');
-    } 
-    else {
-        res.status(404).send('Not Found!');
+const customerController = (req, res) => {
+    try {
+        if (req.method === 'GET') {
+            getCustomer(req, res);
+        } else if (req.method === 'POST') {
+            res.status(201).send('Creating customer...');
+        } else if (req.method === 'PUT') {
+            res.status(200).send('Updating customer...');
+        } else if (req.method === 'DELETE') {
+            res.status(200).send('Removing customer...');
+        }
+    } catch (err) {
+        throw err;
     }
-    
+};
+
+const getCustomer = (req, res) => {
+    try {
+        customerName = "";
+        let statement = "select c.FirstName from SalesLT.Customer c where c.CustomerID = @customerId";
+        if (!req.query.customerId) {
+            console.log("No se incluyo customerId");
+            statement = "select top 10 c.FirstName from SalesLT.Customer c";
+        }
+        executeStatement(statement, req.query.customerId, res);
+    } catch (err) {
+        throw err;
+    }
 };
 
 const executeStatement = (statement, customerId, res) => {
-    connection = new Connection(config);
-
-    // Attempt to connect and execute queries if connection goes through
-    connection.on("connect", err => {
-        if (err) {
-            console.error(err.message);
-        } else {
-            execStmtRequest(statement, customerId, res);
-        }
-    });
-    
-    connection.connect();
+    try {
+        connection = new Connection(config);
+        connection.on("connect", err => {
+            if (err) {
+                throw err;
+            } else {
+                execStmtRequest(statement, customerId, res);
+            }
+        });
+        connection.connect();
+    } catch (err) {
+        throw err;
+    }
 };
 
 const execStmtRequest = (stmt, customerId, res) => {
-
-    const request = new Request(stmt, (err, rowCount) => {
-        if (err) {
-            console.error(err.message);
-        } else {            
-            console.log(`${rowCount} row(s) returned`);
-            if(rowCount == 0) {
-                res.status(200).send("No existe el customerId " + customerId);
+    try {
+        const request = new Request(stmt, (err, rowCount) => {
+            if (err) {
+                console.error(err.message);
+                throw err;
             } else {
-                res.status(200).send("Hello " + customerName);
-            }
-            connection.close();
-        }
-    });
-    request.addParameter('customerId', TYPES.Int, customerId);
-
-    request.on("row", columns => {
-        columns.forEach(column => {
-            if(column.value !== null) {
-                console.log("%s\t%s", column.metadata.colName, column.value);
-                customerName = column.value;
+                console.log(`${rowCount} row(s) returned`);
+                if (rowCount == 0) {
+                    res.status(200).send("No se encontro customers");
+                } else {
+                    res.status(200).send("Hello " + customerName);
+                }
+                connection.close();
             }
         });
-    });
 
-    /*request.on('requestCompleted', function () {
-        console.log('on requestCompleted...' + customerName);
-        connection.close();
-        res.status(200).send("Hello " + customerName);
-    });*/
+        if (customerId) {
+            request.addParameter('customerId', TYPES.Int, customerId);
+        }
 
-    connection.execSql(request);
+        request.on("row", columns => {
+            columns.forEach(column => {
+                if (column.value !== null) {
+                    console.log("%s\t%s", column.metadata.colName, column.value);
+                    customerName = column.value;
+                }
+            });
+        });
+
+        connection.execSql(request);
+    } catch (err) {
+        throw err;
+    }
 };
 
