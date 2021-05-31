@@ -22,90 +22,75 @@ exports.myDemoFunction = (req, res) => {
                 res.status(404).send("Not Found!");
         }
     } catch (err) {
-        console.log(err);
         res.status(500).send(`Error: ${err.message}`);
     }
 };
 
 const customerController = (req, res) => {
-    try {
-        if (req.method === 'GET') {
-            getCustomer(req, res);
-        } else if (req.method === 'POST') {
-            res.status(201).send('Creating customer...');
-        } else if (req.method === 'PUT') {
-            res.status(200).send('Updating customer...');
-        } else if (req.method === 'DELETE') {
-            res.status(200).send('Removing customer...');
-        }
-    } catch (err) {
-        throw err;
+    if (req.method === 'GET') {
+        getCustomer(req, res);
+    } else if (req.method === 'POST') {
+        res.status(201).send('Creating customer...');
+    } else if (req.method === 'PUT') {
+        res.status(200).send('Updating customer...');
+    } else if (req.method === 'DELETE') {
+        res.status(200).send('Removing customer...');
     }
 };
 
 const getCustomer = (req, res) => {
-    try {
-        customerName = "";
-        let statement = "select c.FirstName from SalesLT.Customer c where c.CustomerID = @customerId";
-        if (!req.query.customerId) {
-            console.log("No se incluyo customerId");
-            statement = "select top 10 c.FirstName from SalesLT.Customer c";
-        }
-        executeStatement(statement, req.query.customerId, res);
-    } catch (err) {
-        throw err;
+    customerName = "";
+    let statement = "select c.FirstName from SalesLT.Customer c where c.CustomerID = @customerId";
+    if (!req.query.customerId) {
+        console.log("No se incluyo customerId");
+        statement = "select top 10 c.FirstName from SalesLT.Customer c";
     }
+    executeStatement(statement, req.query.customerId, res);
 };
 
 const executeStatement = (statement, customerId, res) => {
-    try {
-        connection = new Connection(config);
-        connection.on("connect", err => {
-            if (err) {
-                throw err;
-            } else {
-                execStmtRequest(statement, customerId, res);
-            }
-        });
-        connection.connect();
-    } catch (err) {
-        throw err;
-    }
+    connection = new Connection(config);
+    connection.on("connect", err => {
+        if (err) {
+            console.error(err);
+            res.status(500).send(`Error: ${err.message}`);
+        } else {
+            execStmtRequest(statement, customerId, res);
+        }
+    });
+    connection.connect();
 };
 
 const execStmtRequest = (stmt, customerId, res) => {
-    try {
-        const request = new Request(stmt, (err, rowCount) => {
-            if (err) {
-                console.error(err.message);
-                throw err;
+    const request = new Request(stmt, (err, rowCount) => {
+        if (err) {
+            console.error(err);
+            res.status(500).send(`Error: ${err.message}`);
+        } else {
+            console.log(`${rowCount} row(s) returned`);
+            if (rowCount == 0) {
+                res.status(200).send("No se encontro customers");
             } else {
-                console.log(`${rowCount} row(s) returned`);
-                if (rowCount == 0) {
-                    res.status(200).send("No se encontro customers");
-                } else {
-                    res.status(200).send("Hello " + customerName);
-                }
-                connection.close();
+                res.status(200).send("Hello " + customerName);
+            }
+            connection.close();
+        }
+    });
+
+    if (customerId) {
+        request.addParameter('customerId', TYPES.Int, customerId);
+    }
+
+    request.on("row", columns => {
+        columns.forEach(column => {
+            if (column.value !== null) {
+                console.log("%s\t%s", column.metadata.colName, column.value);
+                customerName = column.value;
             }
         });
+    });
 
-        if (customerId) {
-            request.addParameter('customerId', TYPES.Int, customerId);
-        }
+    connection.execSql(request);
 
-        request.on("row", columns => {
-            columns.forEach(column => {
-                if (column.value !== null) {
-                    console.log("%s\t%s", column.metadata.colName, column.value);
-                    customerName = column.value;
-                }
-            });
-        });
-
-        connection.execSql(request);
-    } catch (err) {
-        throw err;
-    }
 };
 
