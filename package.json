@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "yaml2json .env-dev.yaml > .env.json && env-cmd -r ./.env.json functions-framework --target=myDemoFunction"
+    "start": "yaml2json .env-dev.yaml > .env.json && env-cmd -r ./.env.json functions-framework --target=myDemoFunction",
+    "deploy": "gcloud functions deploy myDemoFunction --runtime=nodejs14 --trigger-http --allow-unauthenticated --env-vars-file .env-prod.yaml"
   },
   "author": "Daniel Olano",
   "license": "ISC",
