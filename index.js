@@ -1,4 +1,4 @@
-const config = require('./db/config.json')
+const config = require('./db/config');
 const queries = require('./db/queries');
 
 var Connection = require('tedious').Connection;
@@ -7,6 +7,10 @@ var TYPES = require('tedious').TYPES;
 
 var jsonArray = [];
 var connection;
+
+exports.myFunctionTesting = (req, res) => {
+    res.status(200).send(process.env);
+};
 
 exports.myDemoFunction = (req, res) => {
     try {
@@ -59,9 +63,7 @@ const getCustomer = (req, res) => {
 
 const createCustomer = (req, res) => {
     jsonArray = [];
-    let statement = `INSERT INTO SalesLT.Customer(FirstName, LastName, CompanyName, Phone, PasswordHash, PasswordSalt) 
-                    OUTPUT INSERTED.CustomerID 
-                    VALUES (@firstName, @lastName, @companyName, @phone, NEWID(), '')`;
+    let statement = queries.insertCustomer;
     const dummyData = {
         customerId: 10,
         firstName: "Daniel",
